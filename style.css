@@ -1,0 +1,94 @@
+:root {
+  --clr-yellow-50: hsl(48, 100%, 5%);
+  --clr-yellow-100: hsl(48, 100%, 15%);
+  --clr-red-950: hsl(3, 100%, 95%);
+  --clr-yellow-950: hsl(48, 100%, 97%);
+  --clr-yellow-900: hsl(48, 100%, 93%);
+}
+body {
+  background-color: #f8f8f8;
+  font-family: sans-serif;
+  text-align: center;
+  color: var(--clr-yellow-50);
+  line-height: 1.5;
+  overflow: hidden;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+#game-move-steps {
+  font-size: 2em;
+  font-weight: bold;
+  color: var(--clr-yellow-100);
+}
+#game {
+  --_board-background: var(--clr-yellow-950);
+  --_board-cell-background: var(--clr-yellow-900);
+  --_block-container-border-radius: 8px;
+  --_block-container-size: min(15vmin, 100px);
+  --_board-gap: clamp(8px, 8px + (100vmin - 320px) * (8 / 320), 16px);
+  --_board-padding: calc(var(--_board-gap) * 1.5);
+  margin: 32px;
+  margin-inline: auto;
+  width: fit-content;
+  display: grid;
+  grid-template-columns: repeat(4, var(--_block-container-size));
+  grid-template-rows: repeat(4, var(--_block-container-size));
+  gap: var(--_board-gap);
+  padding: var(--_board-padding);
+  border-radius: calc(
+    var(--_board-padding) / 2 + var(--_block-container-border-radius)
+  );
+  background-color: var(--_board-background);
+  position: relative;
+}
+#game-board-cells-container,
+#game-blocks-container {
+  display: contents;
+}
+.game__board-cell {
+  background-color: var(--_board-cell-background);
+  border-radius: var(--_block-container-border-radius);
+}
+.game__block {
+  --_columnIndex: 0;
+  --_rowIndex: 0;
+  display: grid;
+  place-content: center;
+  font-family: sans-serif;
+  font-size: calc(var(--_block-container-size) / 2.5);
+  font-weight: 800;
+  background-color: #787878;
+  border-radius: var(--_block-container-border-radius);
+  position: absolute;
+  width: var(--_block-container-size);
+  aspect-ratio: 1;
+  left: calc(
+    var(--_board-padding) + var(--_columnIndex) *
+      (var(--_block-container-size) + var(--_board-gap))
+  );
+  top: calc(
+    var(--_board-padding) + var(--_rowIndex) *
+      (var(--_block-container-size) + var(--_board-gap))
+  );
+  box-shadow: 0 0 6px -2px hsl(from var(--clr-yellow-50) h s l / 0.4);
+  transition: left 0.15s ease, top 0.15s ease;
+}
+
+.generated-block {
+  transform: scale(0.5);
+  animation-name: generated-block;
+  animation-duration: 0.3s;
+  animation-timing-function: ease;
+  animation-delay: 0.15s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes generated-block {
+  0% {
+    transform: scale(0.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
