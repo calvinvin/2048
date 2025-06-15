@@ -1,7 +1,8 @@
-import * as Controllers from "./controller.mjs";
+import { GameController } from "./controller.mjs";
 
-Controllers.attachKeyboardControl();
+const gameContainerElement = document.getElementById("game");
+const gameController = new GameController(gameContainerElement);
 
-Controllers.initializeGameBoard();
-
-Controllers.attachSwipeControl();
+gameController.initialize();
+gameController.attachKeyboardControl();
+gameController.attachSwipeControl();

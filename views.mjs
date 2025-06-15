@@ -1,66 +1,70 @@
-import {
-  gameBlockElementNotCreatedYet,
-  getElementByIdStringFromGameDatumId,
-  cssInlineStyle,
-  getColumnAndRowIndexFromGameDataArrayIndex,
-  GameBlock,
-} from "./utilityFunctions.mjs";
+import { getColumnAndRowIndexFromGameDataArrayIndex } from "./utilityFunctions.mjs";
 
-export function renderGameBoardCells() {
-  const gameBoardCellElements = [...Array(16)].map((_) => {
-    const gameBoardCellElement = document.createElement("div");
-    gameBoardCellElement.classList.add("game__board-cell");
-    return gameBoardCellElement;
-  });
-  document
-    .getElementById("game-board-cells-container")
-    .append(...gameBoardCellElements);
-}
+export class View {
+  constructor(gameContainerElement) {
+    this.gameContainerElement = gameContainerElement;
+  }
 
-export function updateView(gameDataArray, gameRoundRecords) {
-  document.getElementById("game-move-steps").textContent = `${
-    gameRoundRecords.length - 1
-  }`;
-  gameDataArray.forEach((gameDataArrayElement, arrayIndex) => {
-    if (gameDataArrayElement === null) return;
-    if (Array.isArray(gameDataArrayElement)) {
-      if (notMergedYet(gameDataArrayElement)) {
-        gameDataArrayElement.forEach((gameDatum) =>
-          renderOrUpdateGameBlockElementByGameDatum(gameDatum, arrayIndex)
-        );
+  renderGameBoardCells() {
+    const gameBoardCellElements = [...Array(16)].map((_) => {
+      const gameBoardCellElement = document.createElement("div");
+      gameBoardCellElement.classList.add("game__board-cell");
+      return gameBoardCellElement;
+    });
+    this.gameContainerElement
+      .querySelector("#game-board-cells-container")
+      .append(...gameBoardCellElements);
+  }
+
+  updateView(gameDataArray, gameRoundRecords) {
+    this.gameContainerElement.querySelector(
+      "#game-move-steps"
+    ).textContent = `${gameRoundRecords.length - 1}`;
+    gameDataArray.forEach((gameDataArrayElement, arrayIndex) => {
+      if (gameDataArrayElement === null) return;
+      if (Array.isArray(gameDataArrayElement)) {
+        if (this.__notMergedYet(gameDataArrayElement)) {
+          gameDataArrayElement.forEach((gameDatum) =>
+            this.__renderOrUpdateGameBlockElementByGameDatum(
+              gameDatum,
+              arrayIndex
+            )
+          );
+        } else {
+        }
       } else {
+        this.__renderOrUpdateGameBlockElementByGameDatum(
+          gameDataArrayElement,
+          arrayIndex
+        );
       }
-    } else {
-      renderOrUpdateGameBlockElementByGameDatum(
-        gameDataArrayElement,
-        arrayIndex
-      );
-    }
-  });
-  clearRemovedGameBlockElements(gameDataArray);
+    });
+    this.__clearRemovedGameBlockElements(gameDataArray);
+  }
 
-  function renderOrUpdateGameBlockElementByGameDatum(gameDatum, arrayIndex) {
-    if (gameBlockElementNotCreatedYet(gameDatum)) {
-      renderGameBlockElementFromGameDatum(gameDatum, arrayIndex);
+  __renderOrUpdateGameBlockElementByGameDatum(gameDatum, arrayIndex) {
+    if (this.__gameBlockElementNotCreatedYet(gameDatum)) {
+      this.__renderGameBlockElementFromGameDatum(gameDatum, arrayIndex);
     } else {
-      updateGameBlockElementByArrayIndex(gameDatum, arrayIndex);
-    }
-    function renderGameBlockElementFromGameDatum(gameDatum, arrayIndex) {
-      document
-        .getElementById("game-blocks-container")
-        .appendChild(GameBlock(gameDatum, arrayIndex));
-    }
-    function updateGameBlockElementByArrayIndex(gameDatum, arrayIndex) {
-      const [columnIndex, rowIndex] =
-        getColumnAndRowIndexFromGameDataArrayIndex(arrayIndex);
-      const gameBlockElement = document.getElementById(
-        getElementByIdStringFromGameDatumId(gameDatum.id)
-      );
-      gameBlockElement.style = cssInlineStyle(gameDatum, arrayIndex);
-      gameBlockElement.textContent = `${gameDatum.value}`;
+      this.__updateGameBlockElementByArrayIndex(gameDatum, arrayIndex);
     }
   }
-  function clearRemovedGameBlockElements(gameDataArray) {
+
+  __renderGameBlockElementFromGameDatum(gameDatum, arrayIndex) {
+    this.gameContainerElement
+      .querySelector("#game-blocks-container")
+      .appendChild(this.__GameBlock(gameDatum, arrayIndex));
+  }
+
+  __updateGameBlockElementByArrayIndex(gameDatum, arrayIndex) {
+    const gameBlockElement = this.gameContainerElement.querySelector(
+      `#${this.__getElementByIdStringFromGameDatumId(gameDatum.id)}`
+    );
+    gameBlockElement.style = this.__cssInlineStyle(gameDatum, arrayIndex);
+    gameBlockElement.textContent = `${gameDatum.value}`;
+  }
+
+  __clearRemovedGameBlockElements(gameDataArray) {
     const gameDataIds = gameDataArray.reduce(
       (accumulator, gameDataArrayElement) => {
         if (gameDataArrayElement === null) {
@@ -77,7 +81,7 @@ export function updateView(gameDataArray, gameRoundRecords) {
       []
     );
     const gameBlockElementIds = Array.from(
-      document.querySelectorAll("div.game__block")
+      this.gameContainerElement.querySelectorAll("div.game__block")
     ).map((gameBlockElement) =>
       Number(gameBlockElement.getAttribute("data-game-datum-id"))
     );
@@ -85,9 +89,78 @@ export function updateView(gameDataArray, gameRoundRecords) {
       (gameBlockElementId) => !gameDataIds.includes(gameBlockElementId)
     );
     clearedGameDatumIds.forEach((clearedGameDatumId) =>
-      document
-        .getElementById(getElementByIdStringFromGameDatumId(clearedGameDatumId))
+      this.gameContainerElement
+        .querySelector(
+          `#${this.__getElementByIdStringFromGameDatumId(clearedGameDatumId)}`
+        )
         .remove()
     );
+  }
+
+  __gameBlockElementNotCreatedYet(gameDatum) {
+    return !this.gameContainerElement.querySelector(
+      `#${this.__getElementByIdStringFromGameDatumId(gameDatum.id)}`
+    );
+  }
+
+  __cssInlineStyle(gameDatum, arrayIndex) {
+    const [columnIndex, rowIndex] =
+      getColumnAndRowIndexFromGameDataArrayIndex(arrayIndex);
+    return `--_columnIndex: ${columnIndex}; --_rowIndex: ${rowIndex}; background-color: ${HSLFromGameDatum(
+      gameDatum
+    )}; color: ${textColorFromGameDatum(gameDatum)};`;
+
+    function HSLFromGameDatum(gameDatum) {
+      const { value } = gameDatum;
+      const log2 = Math.log2(value);
+      const hslDict = {
+        1: [48, 100, 80],
+        2: [48, 100, 70],
+        3: [48, 100, 60],
+        4: [48, 100, 50],
+        5: [38, 100, 60],
+        6: [38, 100, 50],
+        7: [28, 100, 50],
+        8: [23, 100, 50],
+        9: [18, 100, 50],
+        10: [13, 100, 50],
+        11: [8, 100, 50],
+        12: [3, 100, 50],
+        13: [0, 100, 50],
+      };
+      const [h, s, l] = hslDict[log2];
+      const hslFromLog2 = `hsl(${h}, ${s}%, ${l}%)`;
+      return hslFromLog2;
+    }
+    function textColorFromGameDatum(gameDatum) {
+      const { value } = gameDatum;
+      const log2 = Math.log2(value);
+      return log2 <= 4 ? "var(--clr-yellow-100)" : "var(--clr-red-950)";
+    }
+  }
+
+  __notMergedYet(gameDataArrayElement) {
+    return (
+      JSON.stringify({ ...gameDataArrayElement[0], id: undefined }) !==
+      JSON.stringify({ ...gameDataArrayElement[1], id: undefined })
+    );
+  }
+
+  __getElementByIdStringFromGameDatumId(gameDatumId) {
+    return `game-block-element-${gameDatumId}`;
+  }
+
+  __GameBlock(gameDatum, arrayIndex) {
+    if (gameDatum === null) return;
+    const gameBlockElement = document.createElement("div");
+    gameBlockElement.setAttribute("data-game-datum-id", gameDatum.id);
+    gameBlockElement.setAttribute(
+      "id",
+      this.__getElementByIdStringFromGameDatumId(gameDatum.id)
+    );
+    gameBlockElement.textContent = gameDatum.value;
+    gameBlockElement.classList.add("game__block", "generated-block");
+    gameBlockElement.style = this.__cssInlineStyle(gameDatum, arrayIndex);
+    return gameBlockElement;
   }
 }

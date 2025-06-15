@@ -4,6 +4,7 @@
   --clr-red-950: hsl(3, 100%, 95%);
   --clr-yellow-950: hsl(48, 100%, 97%);
   --clr-yellow-900: hsl(48, 100%, 93%);
+  --clr-accent: hsl(38, 100%, 50%);
 }
 body {
   background-color: #f8f8f8;
@@ -28,6 +29,11 @@ body {
   --_block-container-size: min(15vmin, 100px);
   --_board-gap: clamp(8px, 8px + (100vmin - 320px) * (8 / 320), 16px);
   --_board-padding: calc(var(--_board-gap) * 1.5);
+  --_board-border-radius: calc(
+    var(--_board-padding) / 2 + var(--_block-container-border-radius)
+  );
+}
+#game-board {
   margin: 32px;
   margin-inline: auto;
   width: fit-content;
@@ -36,9 +42,7 @@ body {
   grid-template-rows: repeat(4, var(--_block-container-size));
   gap: var(--_board-gap);
   padding: var(--_board-padding);
-  border-radius: calc(
-    var(--_board-padding) / 2 + var(--_block-container-border-radius)
-  );
+  border-radius: var(--_board-border-radius);
   background-color: var(--_board-background);
   position: relative;
 }
@@ -73,6 +77,23 @@ body {
   );
   box-shadow: 0 0 6px -2px hsl(from var(--clr-yellow-50) h s l / 0.4);
   transition: left 0.15s ease, top 0.15s ease;
+}
+
+#game-restart-button {
+  padding: 0.5em 1em;
+  font-size: 1.5rem;
+  color: var(--clr-yellow-950);
+  letter-spacing: 0.125em;
+  background-color: var(--clr-accent);
+  border: none;
+  border-radius: var(--_block-container-border-radius);
+  box-shadow: 0 0 8px -2px hsl(from var(--clr-yellow-50) h s l / 0.4);
+  cursor: pointer;
+  @media (hover: hover) {
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 }
 
 .generated-block {
