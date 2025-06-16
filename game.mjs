@@ -6,12 +6,13 @@ export class Game {
     this.gameDataArray = [...Array(16)].map((_) => null);
     this.gameOver = false;
     this.gameDatumIdGenerator = this.gameDatumIdGeneratorFunction();
+    this.round = 1;
   }
 
   *gameDatumIdGeneratorFunction() {
     let gameDatumId = 1;
     while (true) {
-      yield gameDatumId++;
+      yield `round-${this.round}_${gameDatumId++}`;
     }
   }
 
@@ -34,6 +35,7 @@ export class Game {
     const newGameDatum = {
       value: newGameDatumValue,
       id: this.gameDatumIdGenerator.next().value,
+      merged: false,
     };
     const newGameDataArray = [...this.gameDataArray];
     newGameDataArray[newGameDatumIndex] = newGameDatum;
@@ -42,6 +44,7 @@ export class Game {
 
   move(direction) {
     if (this.gameOver) return;
+    if (!["left", "right", "up", "down"].includes(direction)) return;
     const originalGameDataArray = [...this.gameDataArray];
     this.gameDataArray = this.__movedGameDataArray(
       this.gameDataArray,
@@ -190,11 +193,13 @@ export class Game {
 
     function mergeCombinedGameDatum(gameDataArray) {
       return gameDataArray.map((gameDataArrayElement) => {
-        if (Array.isArray(gameDataArrayElement)) {
-          const gameDatum = gameDataArrayElement[0];
-          return { ...gameDatum, value: gameDatum.value * 2 };
+        if (gameDataArrayElement === null) {
+          return null;
+        } else if (Array.isArray(gameDataArrayElement)) {
+          const gameDatum = gameDataArrayElement[1];
+          return { ...gameDatum, value: gameDatum.value * 2, merged: true };
         } else {
-          return gameDataArrayElement;
+          return { ...gameDataArrayElement, merged: false };
         }
       });
     }

@@ -23,6 +23,7 @@ body {
   color: var(--clr-yellow-100);
 }
 #game {
+  --_animation-move-time: 0.15s;
   --_board-background: var(--clr-yellow-950);
   --_board-cell-background: var(--clr-yellow-900);
   --_block-container-border-radius: 8px;
@@ -76,7 +77,8 @@ body {
       (var(--_block-container-size) + var(--_board-gap))
   );
   box-shadow: 0 0 6px -2px hsl(from var(--clr-yellow-50) h s l / 0.4);
-  transition: left 0.15s ease, top 0.15s ease;
+  transition: left var(--_animation-move-time) ease,
+    top var(--_animation-move-time) ease;
 }
 
 #game-restart-button {
@@ -96,18 +98,32 @@ body {
   }
 }
 
-.generated-block {
-  transform: scale(0.5);
-  animation-name: generated-block;
+.generated-block,
+.merged-block {
+  &.generated-block {
+    transform: scale(0.5);
+    animation-name: generated-block;
+  }
+  &.merged-block {
+    animation-name: merged-block;
+  }
   animation-duration: 0.3s;
   animation-timing-function: ease;
-  animation-delay: 0.15s;
+  animation-delay: var(--_animation-move-time);
   animation-fill-mode: forwards;
 }
 
 @keyframes generated-block {
   0% {
     transform: scale(0.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes merged-block {
+  0% {
+    transform: scale(1.25);
   }
   100% {
     transform: scale(1);

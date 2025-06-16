@@ -11,28 +11,9 @@ export class GameController {
   attachKeyboardControl() {
     window.addEventListener("keydown", (e) => {
       e.preventDefault();
-      const keyDownDirectionDict = {
-        arrowleft: "left",
-        a: "left",
-        j: "left",
-        4: "left",
-        arrowright: "right",
-        d: "right",
-        l: "right",
-        6: "right",
-        arrowup: "up",
-        w: "up",
-        i: "up",
-        8: "up",
-        arrowdown: "down",
-        s: "down",
-        k: "down",
-        5: "down",
-      };
-      const key = e.key.toLowerCase();
-      if (!Object.keys(keyDownDirectionDict).includes(key)) return;
+      // if (!Object.keys(keyDownDirectionDict).includes(key)) return;
       if (this.game.gameOver) return;
-      this.game.move(keyDownDirectionDict[e.key.toLowerCase()]);
+      this.game.move(this.#pressedKeyToDirection(e));
       this.view.updateView(this.game.gameDataArray, this.game.gameRoundRecords);
       if (this.game.isEndGame(this.game.gameDataArray)) {
         this.game.gameOver = true;
@@ -45,7 +26,28 @@ export class GameController {
     this.__initializeHTMLElements();
     this.__initializeGameBoard();
   }
-
+  #pressedKeyToDirection(e) {
+    const keyDownDirectionDict = {
+      arrowleft: "left",
+      a: "left",
+      j: "left",
+      4: "left",
+      arrowright: "right",
+      d: "right",
+      l: "right",
+      6: "right",
+      arrowup: "up",
+      w: "up",
+      i: "up",
+      8: "up",
+      arrowdown: "down",
+      s: "down",
+      k: "down",
+      5: "down",
+    };
+    const key = e.key.toLowerCase();
+    return keyDownDirectionDict[e.key.toLowerCase()];
+  }
   __initializeGameBoard() {
     this.view.renderGameBoardCells();
     this.game.createNewGameDatum();
@@ -81,6 +83,7 @@ export class GameController {
   }
 
   restartGame() {
+    this.game.round++;
     this.game.gameRoundRecords = [];
     this.game.gameDataArray = [...Array(16)].map((_) => null);
     this.game.gameOver = false;
@@ -95,26 +98,33 @@ export class GameController {
   attachSwipeControl() {
     const swipeThreshold = 25;
     const swipeDirectionRatioThreshold = 1.5;
-    let initialX, initialY, endX, endY, swipeToDirection;
+    const listeningMove = handlePointerMove.bind(this);
+    let initialX, initialY, endX, endY;
+    let moved = false;
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("pointerup", handlePointerUp.bind(this));
 
     function handlePointerDown(e) {
       initialX = e.screenX;
       initialY = e.screenY;
+      document.addEventListener("pointermove", listeningMove);
     }
-
-    function handlePointerUp(e) {
+    function handlePointerMove(e) {
       endX = e.screenX;
       endY = e.screenY;
       const swipeDirection = getSwipeDirection(initialX, initialY, endX, endY);
-      if (swipeDirection) {
+      if (swipeDirection && !moved) {
         this.game.move(swipeDirection);
         this.view.updateView(
           this.game.gameDataArray,
           this.game.gameRoundRecords
         );
+        moved = true;
       }
+    }
+    function handlePointerUp(e) {
+      document.removeEventListener("pointermove", listeningMove);
+      moved = false;
     }
 
     function getSwipeDirection(initialX, initialY, endX, endY) {

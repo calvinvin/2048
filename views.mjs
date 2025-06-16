@@ -1,6 +1,7 @@
 import { getColumnAndRowIndexFromGameDataArrayIndex } from "./utilityFunctions.mjs";
 
 export class View {
+  ANIMATION_MOVE_TIME = 150;
   constructor(gameContainerElement) {
     this.gameContainerElement = gameContainerElement;
   }
@@ -23,15 +24,12 @@ export class View {
     gameDataArray.forEach((gameDataArrayElement, arrayIndex) => {
       if (gameDataArrayElement === null) return;
       if (Array.isArray(gameDataArrayElement)) {
-        if (this.__notMergedYet(gameDataArrayElement)) {
-          gameDataArrayElement.forEach((gameDatum) =>
-            this.__renderOrUpdateGameBlockElementByGameDatum(
-              gameDatum,
-              arrayIndex
-            )
-          );
-        } else {
-        }
+        gameDataArrayElement.forEach((gameDatum) =>
+          this.__renderOrUpdateGameBlockElementByGameDatum(
+            gameDatum,
+            arrayIndex
+          )
+        );
       } else {
         this.__renderOrUpdateGameBlockElementByGameDatum(
           gameDataArrayElement,
@@ -60,8 +58,17 @@ export class View {
     const gameBlockElement = this.gameContainerElement.querySelector(
       `#${this.__getElementByIdStringFromGameDatumId(gameDatum.id)}`
     );
+    gameBlockElement.classList.remove("generated-block");
+    if (gameDatum.merged === true) {
+      gameBlockElement.classList.add("merged-block");
+    } else {
+      gameBlockElement.classList.remove("merged-block");
+    }
     gameBlockElement.style = this.__cssInlineStyle(gameDatum, arrayIndex);
-    gameBlockElement.textContent = `${gameDatum.value}`;
+    setTimeout(
+      () => (gameBlockElement.textContent = `${gameDatum.value}`),
+      this.ANIMATION_MOVE_TIME
+    );
   }
 
   __clearRemovedGameBlockElements(gameDataArray) {
@@ -83,18 +90,20 @@ export class View {
     const gameBlockElementIds = Array.from(
       this.gameContainerElement.querySelectorAll("div.game__block")
     ).map((gameBlockElement) =>
-      Number(gameBlockElement.getAttribute("data-game-datum-id"))
+      String(gameBlockElement.getAttribute("data-game-datum-id"))
     );
     const clearedGameDatumIds = gameBlockElementIds.filter(
       (gameBlockElementId) => !gameDataIds.includes(gameBlockElementId)
     );
-    clearedGameDatumIds.forEach((clearedGameDatumId) =>
-      this.gameContainerElement
-        .querySelector(
-          `#${this.__getElementByIdStringFromGameDatumId(clearedGameDatumId)}`
-        )
-        .remove()
-    );
+    clearedGameDatumIds.forEach((clearedGameDatumId) => {
+      setTimeout(() => {
+        const removingGameBlockElement =
+          this.gameContainerElement.querySelector(
+            `#${this.__getElementByIdStringFromGameDatumId(clearedGameDatumId)}`
+          );
+        if (removingGameBlockElement) removingGameBlockElement.remove();
+      }, this.ANIMATION_MOVE_TIME);
+    });
   }
 
   __gameBlockElementNotCreatedYet(gameDatum) {
@@ -108,7 +117,9 @@ export class View {
       getColumnAndRowIndexFromGameDataArrayIndex(arrayIndex);
     return `--_columnIndex: ${columnIndex}; --_rowIndex: ${rowIndex}; background-color: ${HSLFromGameDatum(
       gameDatum
-    )}; color: ${textColorFromGameDatum(gameDatum)};`;
+    )}; color: ${textColorFromGameDatum(gameDatum)};${
+      gameDatum.merged ? "z-index: 10" : ""
+    }`;
 
     function HSLFromGameDatum(gameDatum) {
       const { value } = gameDatum;
